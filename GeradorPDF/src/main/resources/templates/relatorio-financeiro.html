@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Relatório financeiro mensal</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1.4cm;
+
+            @bottom-left {
+                content: "MonTech · Relatório financeiro mensal";
+                font-family: Arial, Helvetica, sans-serif;
+                font-size: 8px;
+                color: #000000;
+            }
+            @bottom-right {
+                content: "Página " counter(page) " de " counter(pages);
+                font-family: Arial, Helvetica, sans-serif;
+                font-size: 8px;
+                color: #000000;
+            }
+        }
+
+        body { font-family: Arial, Helvetica, sans-serif; font-size: 10px; color: #000000; }
+        h1 { font-size: 20px; font-weight: bold; margin: 0; color: #000000; }
+        h2 { font-size: 12px; font-weight: bold; margin: 16px 0 2px 0; color: #000000; }
+        .sub { color: #000000; margin: 2px 0 0 0; }
+        .nota { color: #000000; font-size: 8px; margin: 0 0 6px 0; }
+
+        .topo { border-bottom: 2px solid #3b82f6; padding-bottom: 8px; margin-bottom: 10px; }
+
+        .resumo { padding: 8px 10px; border-left: 4px solid #94a3b8; background-color: #f1f5f9; font-size: 11px; }
+        .resumo.warn { border-left-color: #f59e0b; background-color: #fffbeb; }
+        .resumo.good { border-left-color: #10b981; background-color: #ecfdf5; }
+        .resumo.bad  { border-left-color: #ef4444; background-color: #fef2f2; }
+
+        table { width: 100%; border-collapse: collapse; }
+        table.kpis { table-layout: fixed; border-collapse: separate; border-spacing: 6px 0; margin: 8px 0 0 0; }
+        .kpi { border: 1px solid #cbd5e1; padding: 7px 8px; vertical-align: top; }
+        .kpi .rotulo { color: #000000; font-size: 8px; }
+        .kpi .valor { font-size: 16px; font-weight: bold; color: #000000; margin: 3px 0; }
+        .kpi .desc { color: #000000; font-size: 8px; }
+        .linha-kpi2 { margin-top: 6px; }
+
+
+
+
+
+        table.dados th { background-color: #e2e8f0; color: #000000; font-weight: bold; text-align: left; padding: 5px; font-size: 9px; }
+        table.dados td { border-bottom: 1px solid #e2e8f0; padding: 5px; }
+        .numero { text-align: right; }
+
+        .bloco { page-break-inside: avoid; }
+        .nova-pagina { page-break-before: always; }
+        table.diario td, table.diario th { padding: 3px 5px; font-size: 9px; }
+        tr.destaque td { background-color: #f1f5f9; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="topo">
+    <h1>MonTech · Relatório financeiro mensal</h1>
+    <p class="sub" th:text="${r.empresa} + ' · ' + ${r.mesReferencia} + ' (' + ${r.periodo} + ')'">
+        Empresa · Mês (período)
+    </p>
+    <p class="sub" th:text="'Custos dos serviços MonTech · valores em US$ · gerado em ' + ${#temporals.format(dataGeracao, 'dd/MM/yyyy')}">
+        Gerado em 01/01/2025
+    </p>
+</div>
+
+<!-- KPIs: linha 1 -->
+<table class="kpis">
+    <tr>
+        <td class="kpi">
+            <div class="rotulo">Gasto com serviços MonTech no mês</div>
+            <div class="valor" th:text="'US$ ' + ${#numbers.formatDecimal(r.total, 1, 'POINT', 2, 'COMMA')}">US$ 0,00</div>
+            <div class="desc" th:text="${#numbers.formatDecimal(r.orcamentoConsumidoPct, 1, 'POINT', 1, 'COMMA')} + '% do orçamento'">93,0% do orçamento</div>
+        </td>
+        <td class="kpi">
+            <div class="rotulo">Orçamento mensal contratado</div>
+            <div class="valor" th:text="'US$ ' + ${#numbers.formatDecimal(r.orcamento, 1, 'POINT', 2, 'COMMA')}">US$ 0,00</div>
+            <div class="desc" th:text="'Folga de US$ ' + ${#numbers.formatDecimal(r.folga, 1, 'POINT', 2, 'COMMA')}">Folga</div>
+        </td>
+        <td class="kpi">
+            <div class="rotulo" th:text="'Variação vs. ' + ${r.mesAnterior}">Variação</div>
+            <div class="valor" th:class="'valor ' + ${r.variacaoTotalNivel}"
+                 th:text="(${r.variacaoTotalPct} > 0 ? '+' : '') + ${#numbers.formatDecimal(r.variacaoTotalPct, 1, 'POINT', 1, 'COMMA')} + '%'">+0,0%</div>
+            <div class="desc" th:text="'US$ ' + ${#numbers.formatDecimal(r.variacaoTotalUsd, 1, 'POINT', 2, 'COMMA')} + ' a mais que os US$ ' + ${#numbers.formatDecimal(r.totalMesAnterior, 1, 'POINT', 2, 'COMMA')} + ' do mês anterior'">Detalhe</div>
+        </td>
+        <td class="kpi">
+            <div class="rotulo">Custo por voo</div>
+            <div class="valor" th:text="'US$ ' + ${#numbers.formatDecimal(r.custoPorVoo, 1, 'POINT', 2, 'COMMA')}">US$ 0,00</div>
+            <div class="desc">
+        <span th:class="${r.variacaoCustoPorVooNivel}"
+              th:text="(${r.variacaoCustoPorVooPct} > 0 ? '+' : '') + ${#numbers.formatDecimal(r.variacaoCustoPorVooPct, 1, 'POINT', 1, 'COMMA')} + '%'">-0,0%</span>
+                <span th:text="'vs. US$ ' + ${#numbers.formatDecimal(r.custoPorVooAnterior, 1, 'POINT', 2, 'COMMA')} + ' em ' + ${r.mesAnterior}">vs. mês anterior</span>
+            </div>
+        </td>
+    </tr>
+</table>
+
+<!-- KPIs: linha 2 -->
+<table class="kpis linha-kpi2">
+    <tr>
+        <td class="kpi">
+            <div class="rotulo">Gasto médio diário</div>
+            <div class="valor" th:text="'US$ ' + ${#numbers.formatDecimal(r.mediaDiaria, 1, 'POINT', 2, 'COMMA')}">US$ 0,00</div>
+            <div class="desc">
+        <span th:class="${r.variacaoMediaNivel}"
+              th:text="(${r.variacaoMediaPct} > 0 ? '+' : '') + ${#numbers.formatDecimal(r.variacaoMediaPct, 1, 'POINT', 1, 'COMMA')} + '%'">-0,0%</span>
+                <span th:text="'vs. US$ ' + ${#numbers.formatDecimal(r.mediaDiariaAnterior, 1, 'POINT', 2, 'COMMA')} + ' / dia'">vs. mês anterior</span>
+            </div>
+        </td>
+        <td class="kpi">
+            <div class="rotulo">Voos do aeroporto no mês</div>
+            <div class="valor" th:text="${#numbers.formatInteger(r.voos, 1, 'POINT')}">0</div>
+            <div class="desc">
+                <span class="neutral" th:text="(${r.variacaoVoosPct} > 0 ? '+' : '') + ${#numbers.formatDecimal(r.variacaoVoosPct, 1, 'POINT', 1, 'COMMA')} + '%'">+0,0%</span>
+                <span th:text="'vs. ' + ${#numbers.formatInteger(r.voosAnterior, 1, 'POINT')} + ' em ' + ${r.mesAnterior}">vs. mês anterior</span>
+            </div>
+        </td>
+        <td class="kpi">
+            <div class="rotulo">Dia mais caro</div>
+            <div class="valor" th:text="'Dia ' + ${r.diaMaisCaro}">Dia 0</div>
+            <div class="desc" th:text="'US$ ' + ${#numbers.formatDecimal(r.valorDiaMaisCaro, 1, 'POINT', 2, 'COMMA')}">US$ 0,00</div>
+        </td>
+        <td class="kpi">
+            <div class="rotulo">Dia mais barato</div>
+            <div class="valor" th:text="'Dia ' + ${r.diaMaisBarato}">Dia 0</div>
+            <div class="desc" th:text="'US$ ' + ${#numbers.formatDecimal(r.valorDiaMaisBarato, 1, 'POINT', 2, 'COMMA')}">US$ 0,00</div>
+        </td>
+    </tr>
+</table>
+
+<!-- Orçamento -->
+<div class="bloco">
+    <h2>Orçamento do mês</h2>
+    <table class="dados">
+        <thead>
+        <tr>
+            <th>Orçamento mensal contratado</th>
+            <th class="numero">Gasto no mês</th>
+            <th class="numero">Orçamento consumido</th>
+            <th class="numero">Folga</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td th:text="'US$ ' + ${#numbers.formatDecimal(r.orcamento, 1, 'POINT', 2, 'COMMA')}">US$ 0,00</td>
+            <td class="numero" th:text="'US$ ' + ${#numbers.formatDecimal(r.total, 1, 'POINT', 2, 'COMMA')}">US$ 0,00</td>
+            <td class="numero" th:text="${#numbers.formatDecimal(r.orcamentoConsumidoPct, 1, 'POINT', 1, 'COMMA')} + '%'">0,0%</td>
+            <td class="numero good" th:text="'US$ ' + ${#numbers.formatDecimal(r.folga, 1, 'POINT', 2, 'COMMA')}">US$ 0,00</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Composição -->
+<div class="bloco">
+    <h2>O que compõe o custo</h2>
+    <p class="nota" th:text="'Gasto total no mês: US$ ' + ${#numbers.formatDecimal(r.total, 1, 'POINT', 2, 'COMMA')}">Gasto total</p>
+
+
+    <table class="dados" style="margin-top: 4px;">
+        <thead>
+        <tr>
+            <th style="width: 32%;">Serviço</th>
+            <th style="width: 38%;">Tecnologia (AWS)</th>
+            <th class="numero" style="width: 18%;">Valor</th>
+            <th class="numero" style="width: 12%;">% do custo</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="s : ${r.servicos}">
+            <td th:text="${s.nome}">Serviço</td>
+            <td th:text="${s.servicoAws}">AWS</td>
+            <td class="numero" th:text="'US$ ' + ${#numbers.formatDecimal(s.valor, 1, 'POINT', 2, 'COMMA')}">US$ 0,00</td>
+            <td class="numero" th:text="${#numbers.formatDecimal(s.pct, 1, 'POINT', 1, 'COMMA')} + '%'">0,0%</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Comparativo -->
+<div class="bloco">
+    <h2 th:text="'Comparativo com ' + ${r.mesAnterior}">Comparativo</h2>
+    <table class="dados">
+        <thead>
+        <tr>
+            <th>Indicador</th>
+            <th class="numero" th:text="${r.mesReferencia}">Mês atual</th>
+            <th class="numero" th:text="${r.mesAnterior}">Mês anterior</th>
+            <th class="numero">Variação</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>Gasto total com serviços MonTech</td>
+            <td class="numero" th:text="'US$ ' + ${#numbers.formatDecimal(r.total, 1, 'POINT', 2, 'COMMA')}">0</td>
+            <td class="numero" th:text="'US$ ' + ${#numbers.formatDecimal(r.totalMesAnterior, 1, 'POINT', 2, 'COMMA')}">0</td>
+            <td class="numero" th:class="'numero ' + ${r.variacaoTotalNivel}"
+                th:text="(${r.variacaoTotalPct} > 0 ? '+' : '') + ${#numbers.formatDecimal(r.variacaoTotalPct, 1, 'POINT', 1, 'COMMA')} + '%'">0</td>
+        </tr>
+        <tr>
+            <td>Gasto médio diário</td>
+            <td class="numero" th:text="'US$ ' + ${#numbers.formatDecimal(r.mediaDiaria, 1, 'POINT', 2, 'COMMA')}">0</td>
+            <td class="numero" th:text="'US$ ' + ${#numbers.formatDecimal(r.mediaDiariaAnterior, 1, 'POINT', 2, 'COMMA')}">0</td>
+            <td class="numero" th:class="'numero ' + ${r.variacaoMediaNivel}"
+                th:text="(${r.variacaoMediaPct} > 0 ? '+' : '') + ${#numbers.formatDecimal(r.variacaoMediaPct, 1, 'POINT', 1, 'COMMA')} + '%'">0</td>
+        </tr>
+        <tr>
+            <td>Voos do aeroporto</td>
+            <td class="numero" th:text="${#numbers.formatInteger(r.voos, 1, 'POINT')}">0</td>
+            <td class="numero" th:text="${#numbers.formatInteger(r.voosAnterior, 1, 'POINT')}">0</td>
+            <td class="numero neutral" th:text="(${r.variacaoVoosPct} > 0 ? '+' : '') + ${#numbers.formatDecimal(r.variacaoVoosPct, 1, 'POINT', 1, 'COMMA')} + '%'">0</td>
+        </tr>
+        <tr>
+            <td>Custo por voo</td>
+            <td class="numero" th:text="'US$ ' + ${#numbers.formatDecimal(r.custoPorVoo, 1, 'POINT', 2, 'COMMA')}">0</td>
+            <td class="numero" th:text="'US$ ' + ${#numbers.formatDecimal(r.custoPorVooAnterior, 1, 'POINT', 2, 'COMMA')}">0</td>
+            <td class="numero" th:class="'numero ' + ${r.variacaoCustoPorVooNivel}"
+                th:text="(${r.variacaoCustoPorVooPct} > 0 ? '+' : '') + ${#numbers.formatDecimal(r.variacaoCustoPorVooPct, 1, 'POINT', 1, 'COMMA')} + '%'">0</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Anexo: custo diário -->
+<div class="nova-pagina">
+    <h2 th:text="'Anexo · Custo diário com serviços MonTech · ' + ${r.mesReferencia}">Anexo</h2>
+    <p class="nota">Valores diários e acumulados do mês, com o número de voos do aeroporto em cada dia.</p>
+    <table class="dados diario">
+        <thead>
+        <tr>
+            <th>Dia</th>
+            <th class="numero">Gasto do dia</th>
+            <th class="numero">Gasto acumulado</th>
+            <th class="numero">Voos</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="d : ${r.dias}" th:classappend="${d.dia == r.diaMaisCaro or d.dia == r.diaMaisBarato} ? 'destaque'">
+            <td th:text="${#numbers.formatInteger(d.dia, 2, 'POINT')} + '/10'">01/10</td>
+            <td class="numero" th:text="'US$ ' + ${#numbers.formatDecimal(d.valor, 1, 'POINT', 2, 'COMMA')}">US$ 0,00</td>
+            <td class="numero" th:text="'US$ ' + ${#numbers.formatDecimal(d.acumulado, 1, 'POINT', 2, 'COMMA')}">US$ 0,00</td>
+            <td class="numero" th:text="${d.voos}">0</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>
