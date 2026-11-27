@@ -8,7 +8,8 @@ import java.util.List;
 /**
  * Dados fixos (mock) do fechamento de outubro/2026, extraídos de billing-mock.json.
  * Não há cálculo aqui: tudo já vem pronto, o template só exibe.
- */
+*/
+
 public class RelatorioMock {
 
     public static RelatorioFinanceiro outubro2026() {
